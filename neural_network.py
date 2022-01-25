@@ -128,6 +128,7 @@ class NeuralNetwork:
                 j_z_w_case = np.outer(y_case, np.diag(j_z_sum_case))
                 j_z_w[case] = j_z_w_case
             
+            
             # Calculating j_l_w
             j_l_w = np.empty((num_cases, self.layers[n].prev_layer_neurons, self.layers[n].neurons))
             for case in range(num_cases):
