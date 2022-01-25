@@ -1,4 +1,3 @@
-from turtle import shape
 import numpy as np
 
 class Layer:
@@ -6,7 +5,7 @@ class Layer:
     A neural network layer, with a set of neurons and incoming weights
     """
 
-    def __init__(self, prev_layer_neurons, neurons, act_func, der_act_func) -> None:
+    def __init__(self, prev_layer_neurons, neurons, act_func, der_act_func, lr) -> None:
         self.prev_layer_neurons = prev_layer_neurons
         self.neurons = neurons
         # Initializing the weights matrix with random weights between -0.5 and 0.5
@@ -18,6 +17,7 @@ class Layer:
         self.activations = np.zeros(neurons)
         self.act_func = act_func
         self.der_act_func = der_act_func
+        self.lr = lr
     
 if __name__ == "__main__":
     pass

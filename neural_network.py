@@ -1,3 +1,4 @@
+from re import S
 import numpy as np
 from layer import Layer
 from datagen import DataGenerator
@@ -9,21 +10,20 @@ class NeuralNetwork:
     A neural network consisting of an input layer, output layer and an optional amount of hidden layers
     """
 
-    def __init__(self, num_features, layers, loss_func, loss_func_der, lr, num_classes, include_softmax=True) -> None:
+    def __init__(self, num_features, layers, loss_func, loss_func_der, num_classes, include_softmax=True) -> None:
         self.layers = []
         prev_layer_neurons = num_features 
         
-        # We add all the layers
-        for hidden_layer_neurons, hidden_layer_act_func, hidden_layer_der_act_func in layers:
-            self.layers.append(Layer(prev_layer_neurons, hidden_layer_neurons, hidden_layer_act_func, hidden_layer_der_act_func))
-            prev_layer_neurons = hidden_layer_neurons
+        # Adding all the layers
+        for layer_neurons, layer_act_func, layer_der_act_func, lr in layers:
+            self.layers.append(Layer(prev_layer_neurons, layer_neurons, layer_act_func, layer_der_act_func, lr))
+            prev_layer_neurons = layer_neurons
     
-        # Adding the output layer
         self.loss_func = loss_func
         self.loss_func_der = loss_func_der
         self.num_classes = num_classes
         self.include_softmax = include_softmax
-        self.lr = lr
+    
 
     def forward_pass(self, minibatch_x, minibatch_y):
 
@@ -35,6 +35,7 @@ class NeuralNetwork:
         # Adding the biases
         sum_1 = sum_1 + self.layers[0].biases
 
+        # Saving the sum
         self.layers[0].sum = sum_1
 
         # Applying this layer's activation function
@@ -101,25 +102,22 @@ class NeuralNetwork:
                 # Adding each J_soft of each case in the minibatch
                 j_s_z[case] = j_s_z_tmp
             
+            # Computing the initial jacobian j_l_z, where eac row represents that case's j_l_z
             # Iterating through the cases
             j_l_z = np.empty((num_cases, output.shape[0]))
             for case in range(num_cases):
                 j_l_s_case = j_l_s[:, case]
                 j_s_z_case = j_s_z[case]
                 j_l_z[case] = np.dot(j_l_s_case.T, j_s_z_case)
-            
-            # IMPORTANT: In j_l_z each row represents a case
 
         else:
-            # Computing the initial jacobian j_l_z
+            # Computing the initial jacobian j_l_z, where eac row represents that case's j_l_z
             j_l_z =  self.loss_func_der(output, self.one_hot(minibatch_y))
-
-            # IMPORTANT: In j_l_z each row represents a case
             
         for n in range((len(self.layers) - 1), -1, -1):
+            
             # Finding j_z_w
             # Iterating through the cases
-
             j_z_w = np.empty((num_cases, self.layers[n].prev_layer_neurons, self.layers[n].neurons))
             for case in range(num_cases):
                 if n == 0:
@@ -141,7 +139,7 @@ class NeuralNetwork:
             # Iterating through the cases
             for case in range(num_cases):
                 j_l_w_case = j_l_w[case]
-                self.layers[n].in_weights = self.layers[n].in_weights - self.lr * j_l_w_case
+                self.layers[n].in_weights = self.layers[n].in_weights - self.layers[n].lr * j_l_w_case
                 
             # Finding j_z_w_b
             # Iterating through the cases
@@ -163,7 +161,7 @@ class NeuralNetwork:
             # Iterating through the cases
             for case in range(num_cases):
                 j_l_w_b_case = j_l_w_b[case]
-                self.layers[n].biases = self.layers[n].biases - self.lr * j_l_w_b_case.reshape(-1, 1)
+                self.layers[n].biases = self.layers[n].biases - self.layers[n].lr * j_l_w_b_case.reshape(-1, 1)
             
             # Calculating j_z_y
             # Iterating through the cases
@@ -202,13 +200,16 @@ if __name__ == "__main__":
     #dg = DataGenerator(n, dataset_size=10)
     #train, valid, test = dg.generate_imageset(flatten=True)
     #minibatch_x, minibatch_y = dg.unzip(train)
-    #output, loss = nn.forward_pass(minibatch_x, minibatch_y)
-    #bp = nn.backward_pass(output, minibatch_x, minibatch_y)
+    
+    #for _ in range(10000):
+    #    output, loss = nn.forward_pass(minibatch_x, minibatch_y)
+    #    bp = nn.backward_pass(output, minibatch_x, minibatch_y)
+    #print(output)
 
-    nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der), (1, sigmoid, sigmoid_der)], 
-        loss_func=mse, loss_func_der=mse_der, num_classes=2, include_softmax=False, lr=0.5)
+    nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der, 0.5), (1, sigmoid, sigmoid_der, 0.5)], 
+        loss_func=mse, loss_func_der=mse_der, num_classes=2, include_softmax=False)
 
-    minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    minibatch_xor_x = np.array([[0, 1], [0, 0], [1, 0], [1, 1]])
     minibatch_xor_y = np.array([0, 1, 1, 0])
 
     for _ in range(10000):
