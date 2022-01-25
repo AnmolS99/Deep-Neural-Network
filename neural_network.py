@@ -9,19 +9,16 @@ class NeuralNetwork:
     A neural network consisting of an input layer, output layer and an optional amount of hidden layers
     """
 
-    def __init__(self, num_features, hidden_layers, output_layer_neurons, output_layer_act_func, output_layer_der_act_func,
-            loss_func, loss_func_der, lr, num_classes, include_softmax=True) -> None:
+    def __init__(self, num_features, layers, loss_func, loss_func_der, lr, num_classes, include_softmax=True) -> None:
         self.layers = []
         prev_layer_neurons = num_features 
         
-        # If we have hidden layers, add these
-        if len(hidden_layers) > 0:
-            for hidden_layer_neurons, hidden_layer_act_func, hidden_layer_der_act_func in hidden_layers:
-                self.layers.append(Layer(prev_layer_neurons, hidden_layer_neurons, hidden_layer_act_func, hidden_layer_der_act_func))
-                prev_layer_neurons = hidden_layer_neurons
-        
+        # We add all the layers
+        for hidden_layer_neurons, hidden_layer_act_func, hidden_layer_der_act_func in layers:
+            self.layers.append(Layer(prev_layer_neurons, hidden_layer_neurons, hidden_layer_act_func, hidden_layer_der_act_func))
+            prev_layer_neurons = hidden_layer_neurons
+    
         # Adding the output layer
-        self.layers.append(Layer(prev_layer_neurons, output_layer_neurons, output_layer_act_func, der_act_func=output_layer_der_act_func))
         self.loss_func = loss_func
         self.loss_func_der = loss_func_der
         self.num_classes = num_classes
@@ -69,7 +66,6 @@ class NeuralNetwork:
 
         return output, self.loss_func(output, self.one_hot(minibatch_y))
     
-
 
 
     def backward_pass(self, output, minibatch_x, minibatch_y):
@@ -185,6 +181,7 @@ class NeuralNetwork:
                 j_z_y_case = j_z_y[case]
                 j_l_y[case] = np.dot(j_l_z_case, j_z_y_case)
             
+            # Passing the Jacobian of the loss with the respect to the prevoius layer, to the previous layer
             j_l_z = j_l_y
 
 
@@ -208,9 +205,8 @@ if __name__ == "__main__":
     #output, loss = nn.forward_pass(minibatch_x, minibatch_y)
     #bp = nn.backward_pass(output, minibatch_x, minibatch_y)
 
-    nn2 = NeuralNetwork(num_features=2, hidden_layers=[(2, sigmoid, sigmoid_der)], output_layer_neurons=1, 
-        output_layer_act_func=sigmoid, output_layer_der_act_func=sigmoid_der, loss_func=mse, 
-        loss_func_der=mse_der, num_classes=2, include_softmax=False, lr=0.5)
+    nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der), (1, sigmoid, sigmoid_der)], 
+        loss_func=mse, loss_func_der=mse_der, num_classes=2, include_softmax=False, lr=0.5)
 
     minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     minibatch_xor_y = np.array([0, 1, 1, 0])
@@ -218,5 +214,5 @@ if __name__ == "__main__":
     for _ in range(10000):
         output2, loss2 = nn2.forward_pass(minibatch_xor_x, minibatch_xor_y)
         nn2.backward_pass(output2, minibatch_xor_x, minibatch_xor_y)
-        print(output2)
+    print(output2)
 
