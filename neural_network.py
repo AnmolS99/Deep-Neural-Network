@@ -117,16 +117,14 @@ class NeuralNetwork:
         for n in range((len(self.layers) - 1), -1, -1):
             
             # Finding j_z_w
-            # Iterating through the cases
-            j_z_w = np.empty((num_cases, self.layers[n].prev_layer_neurons, self.layers[n].neurons))
-            for case in range(num_cases):
-                if n == 0:
-                    y_case = minibatch_x[case]
-                else:
-                    y_case = self.layers[n-1].activations[:, case]
-                j_z_sum_case = np.diag(self.layers[n].der_act_func(self.layers[n].sum[:, case]))
-                j_z_w_case = np.outer(y_case, np.diag(j_z_sum_case))
-                j_z_w[case] = j_z_w_case
+            if n == 0:
+                y = minibatch_x.T
+            else:
+                y = self.layers[n-1].activations
+            
+            j_z_sum_diag = self.layers[n].der_act_func(self.layers[n].sum).T
+            j_z_sum = np.eye(j_z_sum_diag.shape[1]) * j_z_sum_diag[:,np.newaxis,:]
+            j_z_w = np.einsum("ik,kj->kij", y, j_z_sum_diag)
             
             
             # Calculating j_l_w
@@ -210,7 +208,7 @@ if __name__ == "__main__":
     nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der, 0.5), (1, sigmoid, sigmoid_der, 0.5)], 
         loss_func=mse, loss_func_der=mse_der, num_classes=2, include_softmax=False)
 
-    minibatch_xor_x = np.array([[0, 1], [0, 0], [1, 0], [1, 1]])
+    minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     minibatch_xor_y = np.array([0, 1, 1, 0])
 
     for _ in range(10000):
