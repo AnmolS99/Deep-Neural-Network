@@ -38,7 +38,7 @@ def cross_entropy_der(p, t):
         
         # Iterating over the individual outputs from the neurons and applying the cross-entropy function
         for j in range(len(pred)):
-            cross_entropy_derived = pred[j] - target[j]
+            cross_entropy_derived = -target[j]*(1/pred[j]*np.log(2))
             result[j, i] = cross_entropy_derived
     
     return result

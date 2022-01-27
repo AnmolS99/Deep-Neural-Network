@@ -1,3 +1,4 @@
+from audioop import cross
 from re import S
 import numpy as np
 from layer import Layer
@@ -123,6 +124,7 @@ class NeuralNetwork:
                 y = self.layers[n-1].activations
             
             j_z_sum_diag = self.layers[n].der_act_func(self.layers[n].sum).T
+            # NEED TO USE THIS LATER IN THE CODE
             j_z_sum = np.eye(j_z_sum_diag.shape[1]) * j_z_sum_diag[:,np.newaxis,:]
             j_z_w = np.einsum("ik,kj->kij", y, j_z_sum_diag)
             
@@ -191,28 +193,28 @@ class NeuralNetwork:
         return one_hot
 
 if __name__ == "__main__":
-    #n = 10
-    #nn = NeuralNetwork(num_features=n**2, hidden_layers=[(5, sigmoid, sigmoid_der)], output_layer_neurons=4, 
-    #    output_layer_act_func=sigmoid, output_layer_der_act_func=sigmoid_der, loss_func=cross_entropy, 
-    #    loss_func_der=cross_entropy_der, num_classes=4, include_softmax=True, lr=0.5)
+    n = 10
+    nn = NeuralNetwork(num_features=n**2, layers=[(20, sigmoid, sigmoid_der, 0.5), (20, sigmoid, sigmoid_der, 0.5), (4, sigmoid, sigmoid_der, 0.5)], 
+        loss_func=cross_entropy, loss_func_der=cross_entropy_der, num_classes=4, include_softmax=True)
 
-    #dg = DataGenerator(n, dataset_size=10)
-    #train, valid, test = dg.generate_imageset(flatten=True)
-    #minibatch_x, minibatch_y = dg.unzip(train)
+    dg = DataGenerator(n, dataset_size=10)
+    train, valid, test = dg.generate_imageset(flatten=True)
+    minibatch_x, minibatch_y = dg.unzip(train)
     
-    #for _ in range(10000):
-    #    output, loss = nn.forward_pass(minibatch_x, minibatch_y)
-    #    bp = nn.backward_pass(output, minibatch_x, minibatch_y)
-    #print(output)
-
-    nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der, 0.5), (1, sigmoid, sigmoid_der, 0.5)], 
-        loss_func=mse, loss_func_der=mse_der, num_classes=2, include_softmax=False)
-
-    minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    minibatch_xor_y = np.array([0, 1, 1, 0])
-
     for _ in range(10000):
-        output2, loss2 = nn2.forward_pass(minibatch_xor_x, minibatch_xor_y)
-        nn2.backward_pass(output2, minibatch_xor_x, minibatch_xor_y)
-    print(output2)
+       output, loss = nn.forward_pass(minibatch_x, minibatch_y)
+       bp = nn.backward_pass(output, minibatch_x, minibatch_y)
+    print(output)
+    print(minibatch_y)
+
+    # nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der, 0.5), (2, sigmoid, sigmoid_der, 0.5)], 
+    #     loss_func=cross_entropy, loss_func_der=cross_entropy_der, num_classes=2, include_softmax=True)
+
+    # minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    # minibatch_xor_y = np.array([0, 1, 1, 0])
+
+    # for _ in range(10000):
+    #     output2, loss2 = nn2.forward_pass(minibatch_xor_x, minibatch_xor_y)
+    #     nn2.backward_pass(output2, minibatch_xor_x, minibatch_xor_y)
+    # print(output2)
 
