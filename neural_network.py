@@ -1,4 +1,5 @@
 from audioop import cross
+from cgi import test
 from re import S
 import numpy as np
 from layer import Layer
@@ -128,41 +129,21 @@ class NeuralNetwork:
             j_z_sum = np.eye(j_z_sum_diag.shape[1]) * j_z_sum_diag[:,np.newaxis,:]
             j_z_w = np.einsum("ik,kj->kij", y, j_z_sum_diag)
             
-            
             # Calculating j_l_w
-            j_l_w = np.empty((num_cases, self.layers[n].prev_layer_neurons, self.layers[n].neurons))
-            for case in range(num_cases):
-                j_l_z_case =  j_l_z[case]
-                j_z_w_case = j_z_w[case]
-                j_l_w[case] = j_l_z_case * j_z_w_case
+            j_l_w = np.einsum("kj,kij->kij", j_l_z, j_z_w)
             
-            # Using J_L_W to update the weights
-            # Iterating through the cases
-            for case in range(num_cases):
-                j_l_w_case = j_l_w[case]
-                self.layers[n].in_weights = self.layers[n].in_weights - self.layers[n].lr * j_l_w_case
+            # Using j_l_w to update the weights
+            self.layers[n].in_weights = self.layers[n].in_weights - self.layers[n].lr * (sum(j_l_w) / len(j_l_w))
                 
             # Finding j_z_w_b
-            # Iterating through the cases
-            j_z_w_b = np.empty((num_cases, self.layers[n].neurons))
-            for case in range(num_cases):
-                y_case = 1
-                j_z_sum_case = np.diag(self.layers[n].der_act_func(self.layers[n].sum[:, case]))
-                j_z_w_b_case = np.outer(y_case, np.diag(j_z_sum_case))
-                j_z_w_b[case] = j_z_w_b_case
+            y_b = np.ones((1, num_cases))
+            j_z_w_b = np.einsum("ik,kj->kj", y_b, j_z_sum_diag)
 
             # Calculating j_l_w_b
-            j_l_w_b = np.empty((num_cases, self.layers[n].neurons))
-            for case in range(num_cases):
-                j_l_z_case =  j_l_z[case]
-                j_z_w_b_case = j_z_w_b[case]
-                j_l_w_b[case] = j_l_z_case * j_z_w_b_case
-            
+            j_l_w_b = np.einsum("kj,kj->kj", j_l_z, j_z_w_b)
+
             # Using j_l_w_b to update the weights
-            # Iterating through the cases
-            for case in range(num_cases):
-                j_l_w_b_case = j_l_w_b[case]
-                self.layers[n].biases = self.layers[n].biases - self.layers[n].lr * j_l_w_b_case.reshape(-1, 1)
+            self.layers[n].biases = self.layers[n].biases - self.layers[n].lr * np.array(sum(j_l_w_b) / len(j_l_w_b)).reshape(-1, 1)
             
             # Calculating j_z_y
             # Iterating through the cases
@@ -184,37 +165,43 @@ class NeuralNetwork:
             j_l_z = j_l_y
 
 
-
     def one_hot(self, x):
         """
         Function that converts array of targets to array of one-hot-targets (which are arrays)
         """
         one_hot = np.eye(self.num_classes)[x]
         return one_hot
-
-if __name__ == "__main__":
+    
+def test_data_images():
     n = 10
-    nn = NeuralNetwork(num_features=n**2, layers=[(20, sigmoid, sigmoid_der, 0.5), (20, sigmoid, sigmoid_der, 0.5), (4, sigmoid, sigmoid_der, 0.5)], 
-        loss_func=cross_entropy, loss_func_der=cross_entropy_der, num_classes=4, include_softmax=True)
+    nn = NeuralNetwork(num_features=n**2, layers=[(50, sigmoid, sigmoid_der, 0.5), (75, sigmoid, sigmoid_der, 0.5), (50, sigmoid, sigmoid_der, 0.5), (4, sigmoid, sigmoid_der, 0.5)], 
+    loss_func=cross_entropy, loss_func_der=cross_entropy_der, num_classes=4, include_softmax=True)
 
     dg = DataGenerator(n, dataset_size=10)
     train, valid, test = dg.generate_imageset(flatten=True)
     minibatch_x, minibatch_y = dg.unzip(train)
-    
+
     for _ in range(10000):
-       output, loss = nn.forward_pass(minibatch_x, minibatch_y)
-       bp = nn.backward_pass(output, minibatch_x, minibatch_y)
+        output, loss = nn.forward_pass(minibatch_x, minibatch_y)
+        bp = nn.backward_pass(output, minibatch_x, minibatch_y)
     print(output)
     print(minibatch_y)
 
-    # nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der, 0.5), (2, sigmoid, sigmoid_der, 0.5)], 
-    #     loss_func=cross_entropy, loss_func_der=cross_entropy_der, num_classes=2, include_softmax=True)
+def test_xor():
+    nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der, 0.5), (1, sigmoid, sigmoid_der, 0.5)], 
+        loss_func=mse, loss_func_der=mse_der, num_classes=2, include_softmax=False)
 
-    # minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    # minibatch_xor_y = np.array([0, 1, 1, 0])
+    minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    minibatch_xor_y = np.array([0, 1, 1, 0])
 
-    # for _ in range(10000):
-    #     output2, loss2 = nn2.forward_pass(minibatch_xor_x, minibatch_xor_y)
-    #     nn2.backward_pass(output2, minibatch_xor_x, minibatch_xor_y)
-    # print(output2)
+    for _ in range(10000):
+        output2, loss2 = nn2.forward_pass(minibatch_xor_x, minibatch_xor_y)
+        nn2.backward_pass(output2, minibatch_xor_x, minibatch_xor_y)
+    print(output2)
+    print(minibatch_xor_y)
 
+if __name__ == "__main__":
+    test_data_images()
+    #test_xor()
+
+    # BURDE BRUKE CONFIGPARSER
