@@ -1,6 +1,3 @@
-from audioop import cross
-from cgi import test
-from re import S
 import numpy as np
 from layer import Layer
 from datagen import DataGenerator
@@ -11,7 +8,6 @@ class NeuralNetwork:
     """
     A neural network consisting of an input layer, output layer and an optional amount of hidden layers
     """
-
     def __init__(self, num_features, layers, loss_func, loss_func_der, num_classes, include_softmax=True) -> None:
         self.layers = []
         prev_layer_neurons = num_features 
@@ -70,7 +66,6 @@ class NeuralNetwork:
         return output, self.loss_func(output, self.one_hot(minibatch_y))
     
 
-
     def backward_pass(self, output, minibatch_x, minibatch_y):
         num_cases = output.shape[1]
 
@@ -125,7 +120,6 @@ class NeuralNetwork:
                 y = self.layers[n-1].activations
             
             j_z_sum_diag = self.layers[n].der_act_func(self.layers[n].sum).T
-            # NEED TO USE THIS LATER IN THE CODE
             j_z_sum = np.eye(j_z_sum_diag.shape[1]) * j_z_sum_diag[:,np.newaxis,:]
             j_z_w = np.einsum("ik,kj->kij", y, j_z_sum_diag)
             
@@ -146,20 +140,10 @@ class NeuralNetwork:
             self.layers[n].biases = self.layers[n].biases - self.layers[n].lr * np.array(sum(j_l_w_b) / len(j_l_w_b)).reshape(-1, 1)
             
             # Calculating j_z_y
-            # Iterating through the cases
-            j_z_y = np.empty((num_cases, self.layers[n].neurons, self.layers[n].prev_layer_neurons))
-            for case in range(num_cases):
-                j_z_sum_case = np.diag(self.layers[n].der_act_func(self.layers[n].sum[:, case]))
-                j_z_y_case = np.dot(j_z_sum_case, self.layers[n].in_weights.T)
-                j_z_y[case] = j_z_y_case
+            j_z_y = np.einsum("kii,ij->kij", j_z_sum, self.layers[n].in_weights.T)
             
             # Calculating j_l_y
-            # Iterating through the cases
-            j_l_y = np.empty((num_cases, self.layers[n].prev_layer_neurons))
-            for case in range(num_cases):
-                j_l_z_case = j_l_z[case]
-                j_z_y_case = j_z_y[case]
-                j_l_y[case] = np.dot(j_l_z_case, j_z_y_case)
+            j_l_y = np.einsum("ki,kij->kj", j_l_z, j_z_y)
             
             # Passing the Jacobian of the loss with the respect to the prevoius layer, to the previous layer
             j_l_z = j_l_y
@@ -201,7 +185,7 @@ def test_xor():
     print(minibatch_xor_y)
 
 if __name__ == "__main__":
-    test_data_images()
-    #test_xor()
+    #test_data_images()
+    test_xor()
 
     # BURDE BRUKE CONFIGPARSER
