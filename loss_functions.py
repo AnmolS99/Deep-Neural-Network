@@ -22,7 +22,7 @@ def cross_entropy(p, t):
 
         loss_vector[i] = cross_entropy
     
-    return loss_vector
+    return loss_vector.mean()
 
 def cross_entropy_der(p, t):
     """
