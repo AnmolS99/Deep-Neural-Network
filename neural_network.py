@@ -9,7 +9,7 @@ class NeuralNetwork:
     """
     A neural network consisting of an input layer, output layer and an optional amount of hidden layers
     """
-    def __init__(self, num_features, layers, num_classes, include_softmax=True) -> None:
+    def __init__(self, num_features, layers, loss_func, num_classes, include_softmax=True) -> None:
         self.layers = []
         prev_layer_neurons = num_features 
         
@@ -17,15 +17,16 @@ class NeuralNetwork:
         for layer_neurons, layer_act_func, layer_der_act_func, lr in layers:
             self.layers.append(Layer(prev_layer_neurons, layer_neurons, layer_act_func, layer_der_act_func, lr))
             prev_layer_neurons = layer_neurons
-    
+        
+        # Setting loss function and the derivative of the loss function
+        self.loss_func = loss_func
+        if loss_func == mse:
+            self.loss_func_der = mse_der
+        elif loss_func == cross_entropy:
+            self.loss_func_der = cross_entropy_der
+
         self.num_classes = num_classes
         self.include_softmax = include_softmax
-        if include_softmax:
-            self.loss_func = cross_entropy
-            self.loss_func_der = cross_entropy_der
-        else:
-            self.loss_func = mse
-            self.loss_func_der = mse_der
     
 
     def forward_pass(self, minibatch_x, minibatch_y):
@@ -163,8 +164,8 @@ class NeuralNetwork:
     
 def test_data_images():
     n = 10
-    nn = NeuralNetwork(num_features=n**2, layers=[(50, sigmoid, sigmoid_der, 0.5), (75, sigmoid, sigmoid_der, 0.5), (4, sigmoid, sigmoid_der, 0.5)],
-     num_classes=4, include_softmax=True)
+    nn = NeuralNetwork(num_features=n**2, layers=[(50, sigmoid, sigmoid_der, 0.75), (75, sigmoid, sigmoid_der, 0.75), (4, sigmoid, sigmoid_der, 0.75)], 
+    loss_func=cross_entropy, num_classes=4, include_softmax=True)
 
     dg = DataGenerator(n, dataset_size=10)
     train, valid, test = dg.generate_imageset(flatten=True)
@@ -183,14 +184,14 @@ def test_data_images():
     loss_valid_list = np.array(loss_valid_list)
     plt.plot(loss_train_list)
     plt.plot(loss_valid_list)
-    # plt.show()
+    #plt.show()
 
     print(output)
     print(minibatch_y)
 
 def test_xor():
-    nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der, 0.5), (1, sigmoid, sigmoid_der, 0.5)],
-     num_classes=2, include_softmax=False)
+    nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, sigmoid_der, 0.5), (2, sigmoid, sigmoid_der, 0.5)], 
+        loss_func=cross_entropy, num_classes=2, include_softmax=True)
 
     minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     minibatch_xor_y = np.array([0, 1, 1, 0])
@@ -202,7 +203,7 @@ def test_xor():
     print(minibatch_xor_y)
 
 if __name__ == "__main__":
-    test_data_images()
-    #test_xor()
+    #test_data_images()
+    test_xor()
 
     # BURDE BRUKE CONFIGPARSER
