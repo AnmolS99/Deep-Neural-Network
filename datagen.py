@@ -1,5 +1,6 @@
 import math
 import random
+from turtle import shape
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage.draw import line
@@ -168,6 +169,19 @@ class DataGenerator:
     def show_image(self, img_array):
         plt.imshow(img_array)
         plt.show()
+    
+    def get_shape(self, shape_num):
+        """
+        Converts from shape number to shape string
+        """
+        if shape_num == 0:
+            return "circle"
+        elif shape_num == 1:
+            return "square"
+        elif shape_num == 2:
+            return "cross"
+        elif shape_num == 3:
+            return "triangle"
 
     def generate_random_image(self, flatten=False):
         """
@@ -203,7 +217,15 @@ class DataGenerator:
         """
         image_set_shapes = list(map(list, zip(*image_set)))
         return np.array(image_set_shapes[0]), np.array(image_set_shapes[1])
+    
 
-dg = DataGenerator(n=10, dataset_size=100)
-train, valid, test = dg.generate_imageset(flatten=True)
-x, y = dg.unzip(test)
+if __name__ == "__main__":
+    n = 10
+    dg = DataGenerator(n, dataset_size=10, noise_percentage=0)
+    train, valid, test = dg.generate_imageset(flatten=True)
+    batch_x, batch_y = dg.unzip(train)
+    dg.show_image(np.split(batch_x[0], 10))
+    print(batch_y[0])
+    print()
+    print()
+
