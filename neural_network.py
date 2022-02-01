@@ -10,7 +10,7 @@ class NeuralNetwork:
     """
     A neural network consisting of an input layer, output layer and an optional amount of hidden layers
     """
-    def __init__(self, num_features, layers, loss_func, num_classes, include_softmax=True) -> None:
+    def __init__(self, num_features, layers, loss_func, num_classes, regularizer, reg_rate, include_softmax=True) -> None:
         self.layers = []
         prev_layer_neurons = num_features 
         
@@ -27,6 +27,8 @@ class NeuralNetwork:
             self.loss_func_der = cross_entropy_der
 
         self.num_classes = num_classes
+        self.regularizer = regularizer
+        self.reg_rate = reg_rate
         self.include_softmax = include_softmax
     
 
@@ -134,7 +136,7 @@ class NeuralNetwork:
             j_l_w = np.einsum("kj,kij->kij", j_l_z, j_z_w)
             
             # Using j_l_w to update the weights
-            self.layers[n].in_weights = self.layers[n].in_weights - self.layers[n].lr * (sum(j_l_w) / len(j_l_w))
+            self.layers[n].in_weights = self.layers[n].in_weights - self.layers[n].lr * (sum(self.regularization(j_l_w, n)) / len(j_l_w))
                 
             # Finding j_z_w_b
             y_b = np.ones((1, num_cases))
@@ -154,6 +156,18 @@ class NeuralNetwork:
             
             # Passing the Jacobian of the loss with the respect to the prevoius layer, to the previous layer
             j_l_z = j_l_y
+    
+    def regularization(self, j_l_w, n):
+        """
+        Method that takes in a list of j_l_w matrices, and returns a list of regularized j_l_w matrices 
+        """
+        if self.regularizer == "l1":
+            return j_l_w + (self.reg_rate * np.sign(self.layers[n].in_weights))
+        elif self.regularizer == "l2":
+            return j_l_w + (self.reg_rate * self.layers[n].in_weights)
+        else:
+            return j_l_w
+
 
 
     def one_hot(self, x):
@@ -169,9 +183,9 @@ def test_data_images():
     cp = config_parser.ConfigParser("config_images.ini")
     nn = cp.create_nn()
 
-    n = 10
+    n = 20
     dataset_size=800
-    dg = DataGenerator(n, dataset_size=dataset_size)
+    dg = DataGenerator(n, dataset_size=dataset_size, l_lower_frac=2/5, l_higher_frac=2/5)
 
     train, valid, test = dg.generate_imageset(flatten=True)
     batch_x, batch_y = dg.unzip(train)
@@ -191,9 +205,6 @@ def test_data_images():
             minibatch_x = minibatches_x[i]
             minibatch_y = minibatches_y[i]
 
-            # dg.show_image(np.split(minibatch_x[0], 10))
-            # print(dg.get_shape(minibatch_y[0]))
-
             output, loss = nn.forward_pass(minibatch_x, minibatch_y)
             nn.backward_pass(output, minibatch_x, minibatch_y)
             loss_train_list.append(loss)
@@ -211,15 +222,15 @@ def test_data_images():
     print(minibatch_y)
 
 def test_xor():
-    nn2 = NeuralNetwork(num_features=2, layers=[(2, sigmoid, 0.5), (1, sigmoid, 0.5)], 
-        loss_func=mse, num_classes=2, include_softmax=False)
+    cp = config_parser.ConfigParser("config_xor.ini")
+    nn = cp.create_nn()
 
     minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     minibatch_xor_y = np.array([0, 1, 1, 0])
 
-    for _ in range(10000):
-        output2, loss2 = nn2.forward_pass(minibatch_xor_x, minibatch_xor_y)
-        nn2.backward_pass(output2, minibatch_xor_x, minibatch_xor_y)
+    for _ in range(1000):
+        output2, loss2 = nn.forward_pass(minibatch_xor_x, minibatch_xor_y)
+        nn.backward_pass(output2, minibatch_xor_x, minibatch_xor_y)
     print(output2)
     print(minibatch_xor_y)
 
@@ -227,4 +238,4 @@ if __name__ == "__main__":
     test_data_images()
     #test_xor()
 
-    # BURDE BRUKE CONFIGPARSER
+    # MÅ IMPLEMENTERE RESTERENDE ACTIVATION FUNCTIONS

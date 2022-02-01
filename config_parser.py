@@ -28,6 +28,8 @@ class ConfigParser:
         include_softmax = self.config["globals"]["include_softmax"].lower() == "true"
         num_features = int(self.config["globals"]["input"])
         num_classes = int(self.config["globals"]["num_classes"])
+        regularizer = self.config["globals"]["regularizer"].lower()
+        reg_rate = float(self.config["globals"]["reg_rate"])
 
         layers = []
         for section in self.config.sections()[2:]:
@@ -36,7 +38,7 @@ class ConfigParser:
             layer_lr = float(self.config[section]["lr"])
             layers.append((neurons, layer_act_func, layer_lr))
 
-        return neural_network.NeuralNetwork(num_features, layers, loss_func, num_classes, include_softmax)
+        return neural_network.NeuralNetwork(num_features, layers, loss_func, num_classes, regularizer, reg_rate, include_softmax)
     
 if __name__ == "__main__":
     cp = ConfigParser("config_nn.ini")
