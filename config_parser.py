@@ -1,6 +1,6 @@
 import configparser
 
-from activation_functions import linear, relu, sigmoid
+from activation_functions import linear, relu, sigmoid, tanh
 import datagen
 from loss_functions import cross_entropy, mse
 import neural_network
@@ -19,6 +19,8 @@ class ConfigParser:
             return relu
         elif act_func == "linear":
             return linear
+        elif act_func == "tanh":
+            return tanh
     
     def parse_loss_func(self, loss_func):
         if loss_func == "cross_entropy":

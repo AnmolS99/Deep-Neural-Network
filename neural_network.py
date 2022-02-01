@@ -186,7 +186,7 @@ def test_data_images():
     train, valid, test = dg.generate_imageset(flatten=True)
     batch_x, batch_y = dg.unzip(train)
     batch_valid_x, batch_valid_y = dg.unzip(valid)
-    batch_test_x, batch_test_y = dg.unzip(valid)
+    batch_test_x, batch_test_y = dg.unzip(test)
 
     num_batches = (dg.dataset_size * dg.train_frac) // batch_size
 
@@ -241,6 +241,5 @@ if __name__ == "__main__":
     test_data_images()
     #test_xor()
 
-    # MÅ IMPLEMENTERE RESTERENDE ACTIVATION FUNCTIONS
     # MÅ LEGGE TIL VERBOSE FLAG
     # MÅ LEGGE TIL WEIGHT RANGES I CONFIG FOR HVERT LAG

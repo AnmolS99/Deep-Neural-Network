@@ -37,6 +37,18 @@ def linear_der(x):
     tmp = np.ones_like(x)
     return np.ones_like(x)
 
+def tanh(x):
+    """
+    Tanh function
+    """
+    return np.tanh(x)
+
+def tanh_der(x):
+    """
+    Derivative of tanh function
+    """
+    return 1-np.square(tanh(x))
+
 def softmax(x):
     """
     Softmax function
