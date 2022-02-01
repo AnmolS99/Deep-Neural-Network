@@ -181,25 +181,21 @@ class NeuralNetwork:
 
 def test_data_images():
     cp = config_parser.ConfigParser("config_images.ini")
-    nn = cp.create_nn()
-
-    n = 20
-    dataset_size=800
-    dg = DataGenerator(n, dataset_size=dataset_size, l_lower_frac=2/5, l_higher_frac=2/5)
+    dg, nn, epochs, batch_size = cp.create_nn()
 
     train, valid, test = dg.generate_imageset(flatten=True)
     batch_x, batch_y = dg.unzip(train)
     batch_valid_x, batch_valid_y = dg.unzip(valid)
+    batch_test_x, batch_test_y = dg.unzip(valid)
 
-    batch_size = 20
-    num_batches = (dataset_size * 0.70) // batch_size
+    num_batches = (dg.dataset_size * dg.train_frac) // batch_size
 
     minibatches_x = np.split(batch_x, num_batches)
     minibatches_y = np.split(batch_y, num_batches)
 
     loss_train_list = []
     loss_valid_list = []
-    epochs = 100
+    loss_test_list = []
     for _ in range(epochs):
         for i in range(len(minibatches_x)):
             minibatch_x = minibatches_x[i]
@@ -211,15 +207,22 @@ def test_data_images():
 
             output_valid, loss_valid = nn.forward_pass(batch_valid_x, batch_valid_y)
             loss_valid_list.append(loss_valid)
-
-    loss_train_list = np.array(loss_train_list)
-    loss_valid_list = np.array(loss_valid_list)
-    plt.plot(loss_train_list)
-    plt.plot(loss_valid_list)
-    plt.show()
+    
+    output_test, loss_test = nn.forward_pass(batch_test_x, batch_test_y)
 
     print(output)
     print(minibatch_y)
+    print("Average loss of test batch: " + str(loss_test))
+
+    loss_train_list = np.array(loss_train_list)
+    loss_valid_list = np.array(loss_valid_list)
+    plt.plot(loss_train_list, label="Train")
+    plt.plot(loss_valid_list, label="Validate")
+    plt.xlabel("Minibatch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.show()
+
 
 def test_xor():
     cp = config_parser.ConfigParser("config_xor.ini")
@@ -239,3 +242,5 @@ if __name__ == "__main__":
     #test_xor()
 
     # MÅ IMPLEMENTERE RESTERENDE ACTIVATION FUNCTIONS
+    # MÅ LEGGE TIL VERBOSE FLAG
+    # LEGGE TIL TRAINING I GRAFEN
