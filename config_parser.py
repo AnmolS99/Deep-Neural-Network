@@ -57,8 +57,10 @@ class ConfigParser:
         for section in self.config.sections()[2:]:
             neurons = int(self.config[section]["neurons"]) 
             layer_act_func = self.parse_act_func(self.config[section]["activation_function"])
+            layer_wr_lower = float(self.config[section]["wr_lower"])
+            layer_wr_higher = float(self.config[section]["wr_higher"])
             layer_lr = float(self.config[section]["lr"])
-            layers.append((neurons, layer_act_func, layer_lr))
+            layers.append((neurons, layer_act_func, layer_wr_lower, layer_wr_higher, layer_lr))
         
         dg = datagen.DataGenerator(image_dimension, dataset_size, l_lower_frac, l_higher_frac, width_lower_frac, width_higher_frac, centering,
             noise_percentage, train_frac, valid_frac, test_frac)

@@ -2,8 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import config_parser
 from layer import Layer
-from datagen import DataGenerator
-from activation_functions import sigmoid, sigmoid_der, relu, relu_der, softmax
+from activation_functions import softmax
 from loss_functions import cross_entropy, cross_entropy_der, mse, mse_der
 
 class NeuralNetwork:
@@ -15,8 +14,8 @@ class NeuralNetwork:
         prev_layer_neurons = num_features 
         
         # Adding all the layers
-        for layer_neurons, layer_act_func, lr in layers:
-            self.layers.append(Layer(prev_layer_neurons, layer_neurons, layer_act_func, lr))
+        for layer_neurons, layer_act_func, wr_lower, wr_higher, lr in layers:
+            self.layers.append(Layer(prev_layer_neurons, layer_neurons, layer_act_func, wr_lower, wr_higher, lr))
             prev_layer_neurons = layer_neurons
         
         # Setting loss function and the derivative of the loss function
@@ -242,4 +241,4 @@ if __name__ == "__main__":
     #test_xor()
 
     # MÅ LEGGE TIL VERBOSE FLAG
-    # MÅ LEGGE TIL WEIGHT RANGES I CONFIG FOR HVERT LAG
+    # MÅ LEGGE TIL AT ET UTVALG AV BILDER VISES ETTER LOSS GRAFEN
