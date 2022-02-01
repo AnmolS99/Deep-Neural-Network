@@ -226,7 +226,7 @@ def test_data_images():
 
 def test_xor():
     cp = config_parser.ConfigParser("config_xor.ini")
-    nn = cp.create_nn()
+    dg, nn, epochs, batch_size = cp.create_nn()
 
     minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     minibatch_xor_y = np.array([0, 1, 1, 0])
@@ -243,4 +243,4 @@ if __name__ == "__main__":
 
     # MÅ IMPLEMENTERE RESTERENDE ACTIVATION FUNCTIONS
     # MÅ LEGGE TIL VERBOSE FLAG
-    # LEGGE TIL TRAINING I GRAFEN
+    # MÅ LEGGE TIL WEIGHT RANGES I CONFIG FOR HVERT LAG

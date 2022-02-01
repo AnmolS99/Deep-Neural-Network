@@ -1,5 +1,5 @@
 import numpy as np
-from activation_functions import sigmoid, sigmoid_der, relu, relu_der
+from activation_functions import linear_der, sigmoid, sigmoid_der, relu, relu_der, linear
 
 class Layer:
     """
@@ -24,6 +24,8 @@ class Layer:
             self.der_act_func = sigmoid_der
         elif act_func == relu:
             self.der_act_func = relu_der
+        elif act_func == linear:
+            self.der_act_func = linear_der
 
         self.lr = lr
     

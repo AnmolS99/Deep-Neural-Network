@@ -24,6 +24,19 @@ def relu_der(v):
     """
     return np.where(v <= 0, 0, 1)
 
+def linear(x):
+    """
+    Linear function
+    """
+    return x
+
+def linear_der(x):
+    """
+    Derivative of linear function
+    """
+    tmp = np.ones_like(x)
+    return np.ones_like(x)
+
 def softmax(x):
     """
     Softmax function
