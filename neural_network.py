@@ -1,23 +1,35 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import config_parser
+from datagen import DataGenerator
 from layer import Layer
 from activation_functions import softmax
 from loss_functions import cross_entropy, cross_entropy_der, mse, mse_der
+
 
 class NeuralNetwork:
     """
     A neural network consisting of an input layer, output layer and an optional amount of hidden layers
     """
-    def __init__(self, num_features, layers, loss_func, num_classes, regularizer, reg_rate, include_softmax=True) -> None:
+
+    def __init__(self,
+                 num_features,
+                 layers,
+                 loss_func,
+                 num_classes,
+                 regularizer,
+                 reg_rate,
+                 include_softmax=True) -> None:
         self.layers = []
-        prev_layer_neurons = num_features 
-        
+        prev_layer_neurons = num_features
+
         # Adding all the layers
         for layer_neurons, layer_act_func, wr_lower, wr_higher, lr in layers:
-            self.layers.append(Layer(prev_layer_neurons, layer_neurons, layer_act_func, wr_lower, wr_higher, lr))
+            self.layers.append(
+                Layer(prev_layer_neurons, layer_neurons, layer_act_func,
+                      wr_lower, wr_higher, lr))
             prev_layer_neurons = layer_neurons
-        
+
         # Setting loss function and the derivative of the loss function
         self.loss_func = loss_func
         if loss_func == mse:
@@ -29,7 +41,6 @@ class NeuralNetwork:
         self.regularizer = regularizer
         self.reg_rate = reg_rate
         self.include_softmax = include_softmax
-    
 
     def forward_pass(self, minibatch_x, minibatch_y):
 
@@ -51,11 +62,12 @@ class NeuralNetwork:
         if len(self.layers) > 1:
 
             for i in range(1, len(self.layers)):
-                
-                prev_layer_activations = self.layers[i-1].activations
+
+                prev_layer_activations = self.layers[i - 1].activations
 
                 # Multiplying previous layer activations with current layer in-weights to get the sum
-                sum = np.einsum("ij,ik->jk", self.layers[i].in_weights, prev_layer_activations)
+                sum = np.einsum("ij,ik->jk", self.layers[i].in_weights,
+                                prev_layer_activations)
 
                 # Adding the biases
                 sum = sum + self.layers[i].biases
@@ -72,7 +84,6 @@ class NeuralNetwork:
             output = self.layers[-1].activations
 
         return output, self.loss_func(output, self.one_hot(minibatch_y))
-    
 
     def backward_pass(self, output, minibatch_x, minibatch_y):
         num_cases = output.shape[1]
@@ -81,15 +92,15 @@ class NeuralNetwork:
         if self.include_softmax:
 
             # Computing the initial jacobian J_L_S
-            j_l_s =  self.loss_func_der(output, self.one_hot(minibatch_y))
+            j_l_s = self.loss_func_der(output, self.one_hot(minibatch_y))
 
             # Computing the jacobian J_S_Z where S stands for the softmax output, and Z is
             # the output of the final layer (output layer)
-            
+
             # Iterating through the cases
             j_s_z = np.empty((num_cases, output.shape[0], output.shape[0]))
             for case in range(num_cases):
-                s_vector = output[:,case]
+                s_vector = output[:, case]
 
                 # Creating the J_soft jacobian for each case
                 j_s_z_tmp = np.zeros((len(s_vector), len(s_vector)))
@@ -102,11 +113,11 @@ class NeuralNetwork:
                         if i == j:
                             j_s_z_tmp[j, i] = s_i - s_i**2
                         else:
-                            j_s_z_tmp[j, i] = -s_j*s_i
-                
+                            j_s_z_tmp[j, i] = -s_j * s_i
+
                 # Adding each J_soft of each case in the minibatch
                 j_s_z[case] = j_s_z_tmp
-            
+
             # Computing the initial jacobian j_l_z, where eac row represents that case's j_l_z
             # Iterating through the cases
             j_l_z = np.empty((num_cases, output.shape[0]))
@@ -117,26 +128,29 @@ class NeuralNetwork:
 
         else:
             # Computing the initial jacobian j_l_z, where eac row represents that case's j_l_z
-            j_l_z =  self.loss_func_der(output, self.one_hot(minibatch_y))
-            
+            j_l_z = self.loss_func_der(output, self.one_hot(minibatch_y))
+
         for n in range((len(self.layers) - 1), -1, -1):
-            
+
             # Finding j_z_w
             if n == 0:
                 y = minibatch_x.T
             else:
-                y = self.layers[n-1].activations
-            
+                y = self.layers[n - 1].activations
+
             j_z_sum_diag = self.layers[n].der_act_func(self.layers[n].sum).T
-            j_z_sum = np.eye(j_z_sum_diag.shape[1]) * j_z_sum_diag[:,np.newaxis,:]
+            j_z_sum = np.eye(
+                j_z_sum_diag.shape[1]) * j_z_sum_diag[:, np.newaxis, :]
             j_z_w = np.einsum("ik,kj->kij", y, j_z_sum_diag)
-            
+
             # Calculating j_l_w
             j_l_w = np.einsum("kj,kij->kij", j_l_z, j_z_w)
-            
+
             # Using j_l_w to update the weights
-            self.layers[n].in_weights = self.layers[n].in_weights - self.layers[n].lr * (sum(self.regularization(j_l_w, n)) / len(j_l_w))
-                
+            self.layers[n].in_weights = self.layers[
+                n].in_weights - self.layers[n].lr * (
+                    sum(self.regularization(j_l_w, n)) / len(j_l_w))
+
             # Finding j_z_w_b
             y_b = np.ones((1, num_cases))
             j_z_w_b = np.einsum("ik,kj->kj", y_b, j_z_sum_diag)
@@ -145,17 +159,19 @@ class NeuralNetwork:
             j_l_w_b = np.einsum("kj,kj->kj", j_l_z, j_z_w_b)
 
             # Using j_l_w_b to update the weights
-            self.layers[n].biases = self.layers[n].biases - self.layers[n].lr * np.array(sum(j_l_w_b) / len(j_l_w_b)).reshape(-1, 1)
-            
+            self.layers[n].biases = self.layers[n].biases - self.layers[
+                n].lr * np.array(sum(j_l_w_b) / len(j_l_w_b)).reshape(-1, 1)
+
             # Calculating j_z_y
-            j_z_y = np.einsum("kii,ij->kij", j_z_sum, self.layers[n].in_weights.T)
-            
+            j_z_y = np.einsum("kii,ij->kij", j_z_sum,
+                              self.layers[n].in_weights.T)
+
             # Calculating j_l_y
             j_l_y = np.einsum("ki,kij->kj", j_l_z, j_z_y)
-            
+
             # Passing the Jacobian of the loss with the respect to the prevoius layer, to the previous layer
             j_l_z = j_l_y
-    
+
     def regularization(self, j_l_w, n):
         """
         Method that takes in a list of j_l_w matrices, and returns a list of regularized j_l_w matrices 
@@ -167,8 +183,6 @@ class NeuralNetwork:
         else:
             return j_l_w
 
-
-
     def one_hot(self, x):
         """
         Function that converts array of targets to array of one-hot-targets (which are arrays)
@@ -177,9 +191,8 @@ class NeuralNetwork:
         return one_hot
 
 
-
 def test_data_images():
-    cp = config_parser.ConfigParser("config_images.ini")
+    cp = config_parser.ConfigParser("config_no_hidden.ini")
     dg, nn, epochs, batch_size = cp.create_nn()
 
     train, valid, test = dg.generate_imageset(flatten=True)
@@ -204,9 +217,10 @@ def test_data_images():
             nn.backward_pass(output, minibatch_x, minibatch_y)
             loss_train_list.append(loss)
 
-            output_valid, loss_valid = nn.forward_pass(batch_valid_x, batch_valid_y)
+            output_valid, loss_valid = nn.forward_pass(batch_valid_x,
+                                                       batch_valid_y)
             loss_valid_list.append(loss_valid)
-    
+
     output_test, loss_test = nn.forward_pass(batch_test_x, batch_test_y)
 
     print(output)
@@ -235,6 +249,7 @@ def test_xor():
         nn.backward_pass(output2, minibatch_xor_x, minibatch_xor_y)
     print(output2)
     print(minibatch_xor_y)
+
 
 if __name__ == "__main__":
     test_data_images()
