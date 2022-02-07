@@ -1,16 +1,19 @@
 import numpy as np
 
+
 def sigmoid(x):
     """
     Sigmoid function
     """
-    return 1/(1+(np.exp(-x)))
+    return 1 / (1 + (np.exp(-x)))
+
 
 def sigmoid_der(v):
     """
     Derivative of the sigmoid function
     """
-    return sigmoid(v)*(1-sigmoid(v))
+    return sigmoid(v) * (1 - sigmoid(v))
+
 
 def relu(x):
     """
@@ -18,11 +21,13 @@ def relu(x):
     """
     return np.maximum(x, 0)
 
+
 def relu_der(v):
     """
     Derivative of ReLU function
     """
     return np.where(v <= 0, 0, 1)
+
 
 def linear(x):
     """
@@ -30,12 +35,13 @@ def linear(x):
     """
     return x
 
+
 def linear_der(x):
     """
     Derivative of linear function
     """
-    tmp = np.ones_like(x)
     return np.ones_like(x)
+
 
 def tanh(x):
     """
@@ -43,11 +49,13 @@ def tanh(x):
     """
     return np.tanh(x)
 
+
 def tanh_der(x):
     """
     Derivative of tanh function
     """
-    return 1-np.square(tanh(x))
+    return 1 - np.square(tanh(x))
+
 
 def softmax(x):
     """
@@ -55,7 +63,3 @@ def softmax(x):
     """
     exp_matrix = np.exp(x)
     return exp_matrix / exp_matrix.sum(0)
-
-
-if __name__ == "__main__":
-    pass

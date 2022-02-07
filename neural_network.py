@@ -19,6 +19,7 @@ class NeuralNetwork:
                  num_classes,
                  regularizer,
                  reg_rate,
+                 verbose,
                  include_softmax=True) -> None:
         self.layers = []
         prev_layer_neurons = num_features
@@ -40,9 +41,13 @@ class NeuralNetwork:
         self.num_classes = num_classes
         self.regularizer = regularizer
         self.reg_rate = reg_rate
+        self.verbose = verbose
         self.include_softmax = include_softmax
 
     def forward_pass(self, minibatch_x, minibatch_y):
+
+        if self.verbose:
+            print("Network inputs: " + str(minibatch_x) + "\n")
 
         # Multiplying the input neurons with the weights to get the sum into every neuron for every case
         # The resulting matrix has a column for each case in the minibatch, and a row for each neuron in
@@ -83,7 +88,14 @@ class NeuralNetwork:
         else:
             output = self.layers[-1].activations
 
-        return output, self.loss_func(output, self.one_hot(minibatch_y))
+        loss = self.loss_func(output, self.one_hot(minibatch_y))
+
+        if self.verbose:
+            print("Network outputs: " + str(output))
+            print("Target values: " + str(minibatch_y))
+            print("Average loss for this batch: " + str(loss) + "\n")
+
+        return output, loss
 
     def backward_pass(self, output, minibatch_x, minibatch_y):
         num_cases = output.shape[1]
@@ -127,7 +139,7 @@ class NeuralNetwork:
                 j_l_z[case] = np.dot(j_l_s_case.T, j_s_z_case)
 
         else:
-            # Computing the initial jacobian j_l_z, where eac row represents that case's j_l_z
+            # Computing the initial jacobian j_l_z, where each row represents that case's j_l_z
             j_l_z = self.loss_func_der(output, self.one_hot(minibatch_y))
 
         for n in range((len(self.layers) - 1), -1, -1):
@@ -191,15 +203,20 @@ class NeuralNetwork:
         return one_hot
 
 
-def test_data_images():
-    cp = config_parser.ConfigParser("config_no_hidden.ini")
+def train_data_images(filename, verbose=False, show_num_images=5):
+    cp = config_parser.ConfigParser(filename)
     dg, nn, epochs, batch_size = cp.create_nn()
 
+    # Setting verbose
+    nn.verbose = verbose
+
+    # Generating imagesets
     train, valid, test = dg.generate_imageset(flatten=True)
     batch_x, batch_y = dg.unzip(train)
     batch_valid_x, batch_valid_y = dg.unzip(valid)
     batch_test_x, batch_test_y = dg.unzip(test)
 
+    # Calculating the number of minibatches
     num_batches = (dg.dataset_size * dg.train_frac) // batch_size
 
     minibatches_x = np.split(batch_x, num_batches)
@@ -207,7 +224,6 @@ def test_data_images():
 
     loss_train_list = []
     loss_valid_list = []
-    loss_test_list = []
     for _ in range(epochs):
         for i in range(len(minibatches_x)):
             minibatch_x = minibatches_x[i]
@@ -223,8 +239,6 @@ def test_data_images():
 
     output_test, loss_test = nn.forward_pass(batch_test_x, batch_test_y)
 
-    print(output)
-    print(minibatch_y)
     print("Average loss of test batch: " + str(loss_test))
 
     loss_train_list = np.array(loss_train_list)
@@ -236,24 +250,10 @@ def test_data_images():
     plt.legend()
     plt.show()
 
-
-def test_xor():
-    cp = config_parser.ConfigParser("config_xor.ini")
-    dg, nn, epochs, batch_size = cp.create_nn()
-
-    minibatch_xor_x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    minibatch_xor_y = np.array([0, 1, 1, 0])
-
-    for _ in range(1000):
-        output2, loss2 = nn.forward_pass(minibatch_xor_x, minibatch_xor_y)
-        nn.backward_pass(output2, minibatch_xor_x, minibatch_xor_y)
-    print(output2)
-    print(minibatch_xor_y)
+    dg.show_random_images(show_num_images)
 
 
 if __name__ == "__main__":
-    test_data_images()
-    #test_xor()
-
-    # MÅ LEGGE TIL VERBOSE FLAG
-    # MÅ LEGGE TIL AT ET UTVALG AV BILDER VISES ETTER LOSS GRAFEN
+    train_data_images("config_five_hidden.ini",
+                      verbose=False,
+                      show_num_images=6)
