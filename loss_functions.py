@@ -64,7 +64,7 @@ def mse(p, t):
 
 def mse_der(p, t):
     """
-    Mean-squared error derivative function, target needs have as many coulmns as prediction has rows
+    Mean-squared error derivative function, target needs to have as many coulmns as prediction has rows
     """
     num_cases = p.shape[1]
     num_outputs = p.shape[0]

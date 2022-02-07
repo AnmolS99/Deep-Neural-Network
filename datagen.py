@@ -260,12 +260,17 @@ class DataGenerator:
             elif case_number == 3:
                 return (self.create_triangle(flatten=flatten), case_number)
 
-    def show_random_images(self, num_images):
+    def show_images(self, batch_x, batch_y, pred):
         """
-        Displays a number of random images
+        Displays images from an imageset
         """
-        for i in range(num_images):
-            self.show_image(self.generate_random_image()[0])
+        for i in range(len(batch_x)):
+            case = batch_x[i]
+            tmp = np.split(case, self.n)
+            print("Target: " + str(batch_y[i]) + " (" +
+                  str(self.get_shape(batch_y[i])) + ")")
+            print("Prediction: " + str(pred[:, i]) + "\n")
+            self.show_image(tmp)
 
     def generate_imageset(self, flatten=False):
         """
@@ -293,3 +298,9 @@ class DataGenerator:
         """
         image_set_shapes = list(map(list, zip(*image_set)))
         return np.array(image_set_shapes[0]), np.array(image_set_shapes[1])
+
+
+if __name__ == "__main__":
+    dg = DataGenerator(10, 100, 0.4, 0.5, 0.04, 0.04, False, 0.05)
+    for _ in range(10):
+        dg.show_image(dg.generate_random_image()[0])

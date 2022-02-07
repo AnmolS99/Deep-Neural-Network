@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import config_parser
-from datagen import DataGenerator
 from layer import Layer
 from activation_functions import softmax
 from loss_functions import cross_entropy, cross_entropy_der, mse, mse_der
@@ -45,7 +44,9 @@ class NeuralNetwork:
         self.include_softmax = include_softmax
 
     def forward_pass(self, minibatch_x, minibatch_y):
-
+        """
+        Forward pass function that sends a batch of cases through the network and returns the output
+        """
         if self.verbose:
             print("Network inputs: " + str(minibatch_x) + "\n")
 
@@ -83,11 +84,13 @@ class NeuralNetwork:
                 # Applying this layer's activation function
                 self.layers[i].activations = self.layers[i].act_func(sum)
 
+        # Adding a softmax layer
         if self.include_softmax:
             output = softmax(self.layers[-1].activations)
         else:
             output = self.layers[-1].activations
 
+        # Calculating the loss
         loss = self.loss_func(output, self.one_hot(minibatch_y))
 
         if self.verbose:
@@ -98,15 +101,20 @@ class NeuralNetwork:
         return output, loss
 
     def backward_pass(self, output, minibatch_x, minibatch_y):
+        """
+        Backward pass function that uses the loss given the output of a batch, 
+        to change the weights towards in a direction of less loss (an optimum)
+        """
+        # Number of cases in the batch
         num_cases = output.shape[1]
 
-        # Assuming softmax layer, so output will be the output from softmax layer
+        # If we have a softmax layer, the output will be the output from softmax layer
         if self.include_softmax:
 
-            # Computing the initial jacobian J_L_S
+            # Computing the initial jacobian j_l_s
             j_l_s = self.loss_func_der(output, self.one_hot(minibatch_y))
 
-            # Computing the jacobian J_S_Z where S stands for the softmax output, and Z is
+            # Computing the jacobian j_s_z where s stands for the softmax output, and z is
             # the output of the final layer (output layer)
 
             # Iterating through the cases
@@ -127,10 +135,10 @@ class NeuralNetwork:
                         else:
                             j_s_z_tmp[j, i] = -s_j * s_i
 
-                # Adding each J_soft of each case in the minibatch
+                # Adding each j_soft of each case in the minibatch
                 j_s_z[case] = j_s_z_tmp
 
-            # Computing the initial jacobian j_l_z, where eac row represents that case's j_l_z
+            # Computing the initial jacobian j_l_z, where each row represents that case's j_l_z
             # Iterating through the cases
             j_l_z = np.empty((num_cases, output.shape[0]))
             for case in range(num_cases):
@@ -144,15 +152,18 @@ class NeuralNetwork:
 
         for n in range((len(self.layers) - 1), -1, -1):
 
-            # Finding j_z_w
+            # Getting activations from the previous layer
             if n == 0:
                 y = minibatch_x.T
             else:
                 y = self.layers[n - 1].activations
 
+            # Calculating the j_z_sum diagonal matrix
             j_z_sum_diag = self.layers[n].der_act_func(self.layers[n].sum).T
             j_z_sum = np.eye(
                 j_z_sum_diag.shape[1]) * j_z_sum_diag[:, np.newaxis, :]
+
+            # Calculating j_z_w
             j_z_w = np.einsum("ik,kj->kij", y, j_z_sum_diag)
 
             # Calculating j_l_w
@@ -204,6 +215,7 @@ class NeuralNetwork:
 
 
 def train_data_images(filename, verbose=False, show_num_images=5):
+    # Using config parser to generate neural network and data generator
     cp = config_parser.ConfigParser(filename)
     dg, nn, epochs, batch_size = cp.create_nn()
 
@@ -224,23 +236,29 @@ def train_data_images(filename, verbose=False, show_num_images=5):
 
     loss_train_list = []
     loss_valid_list = []
+    # Training on the train dataset
     for _ in range(epochs):
         for i in range(len(minibatches_x)):
             minibatch_x = minibatches_x[i]
             minibatch_y = minibatches_y[i]
 
+            # Training on train
             output, loss = nn.forward_pass(minibatch_x, minibatch_y)
             nn.backward_pass(output, minibatch_x, minibatch_y)
+            # Getting the loss of the minibatch
             loss_train_list.append(loss)
 
+            # Getting the loss of valid
             output_valid, loss_valid = nn.forward_pass(batch_valid_x,
                                                        batch_valid_y)
             loss_valid_list.append(loss_valid)
 
+    # Getting the loss of test
     output_test, loss_test = nn.forward_pass(batch_test_x, batch_test_y)
 
     print("Average loss of test batch: " + str(loss_test))
 
+    # Plotting the loss graph
     loss_train_list = np.array(loss_train_list)
     loss_valid_list = np.array(loss_valid_list)
     plt.plot(loss_train_list, label="Train")
@@ -250,10 +268,12 @@ def train_data_images(filename, verbose=False, show_num_images=5):
     plt.legend()
     plt.show()
 
-    dg.show_random_images(show_num_images)
+    # Showing images from the test set
+    dg.show_images(batch_test_x[:show_num_images],
+                   batch_test_y[:show_num_images], output_test)
 
 
 if __name__ == "__main__":
     train_data_images("config_five_hidden.ini",
                       verbose=False,
-                      show_num_images=6)
+                      show_num_images=0)

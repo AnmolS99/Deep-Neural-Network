@@ -14,7 +14,7 @@ class Layer:
         self.in_weights = np.random.uniform(wr_lower, wr_higher,
                                             (prev_layer_neurons, neurons))
 
-        self.biases = np.random.random((neurons, 1)) - 0.5
+        self.biases = np.random.uniform(wr_lower, wr_higher, (neurons, 1))
         self.activations = np.zeros(neurons)
         self.act_func = act_func
 
