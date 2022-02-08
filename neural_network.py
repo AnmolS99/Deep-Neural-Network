@@ -274,6 +274,6 @@ def train_data_images(filename, verbose=False, show_num_images=5):
 
 
 if __name__ == "__main__":
-    train_data_images("config_five_hidden.ini",
+    train_data_images("config_two_hidden.ini",
                       verbose=False,
-                      show_num_images=0)
+                      show_num_images=5)

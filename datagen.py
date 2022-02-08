@@ -301,6 +301,6 @@ class DataGenerator:
 
 
 if __name__ == "__main__":
-    dg = DataGenerator(10, 100, 0.4, 0.5, 0.04, 0.04, False, 0.05)
+    dg = DataGenerator(20, 100, 0.4, 0.5, 0.04, 0.04, False, 0.01)
     for _ in range(10):
         dg.show_image(dg.generate_random_image()[0])
