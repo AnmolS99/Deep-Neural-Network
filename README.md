@@ -1,2 +1,2 @@
-# DeepNeuralNetwork
-A general deep neural network
+# Deep Neural Network 🧠
+A general deep neural network.
