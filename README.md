@@ -31,7 +31,7 @@ Examples of 20x20 images with 1% noise and without centering are given below:
 
 <img src="images/cross20.png" alt="drawing" width="200"/>
 
-## Configuration files
+## Configuration files ⚙️
 
 In the configuration files it is possible to specify the data that the neural network is to be trained and tested on (more info [here](#data-generation)), as well as the neural network architecture. For the neural net it is possible to specify:
 
@@ -50,6 +50,14 @@ For each hidden layer + output layer, you can specify:
 - Learning rate
 
 Config files are located in the [configs](/configs/) folder.
+
+## Installation 📦
+
+To install the required packages, use the following command: `pip install -r requirements.txt`
+
+## Running a model
+
+To run a model, it (and the data) first needs to be specified. This is done in a [configuration file](#configuration-files), in the [configs](/configs/) folder. You could either modify the `config_main.ini` file, or create your own config-file and specify the path to it in the `main()` function in the `main.py` file. To create, train and test the model, run the main.py file: `python main.py`.
 
 ## Results
 
