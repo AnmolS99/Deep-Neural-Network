@@ -1,6 +1,5 @@
 import math
 import random
-from turtle import shape
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage.draw import line
