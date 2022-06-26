@@ -59,6 +59,36 @@ To install the required packages, use the following command: `pip install -r req
 
 To run a model, it (and the data) first needs to be specified. This is done in a [configuration file](#configuration-files), in the [configs](/configs/) folder. You could either modify the `config_main.ini` file, or create your own config-file and specify the path to it in the `main()` function in the `main.py` file. To create, train and test the model, run the main.py file: `python main.py`.
 
-## Results
+## Results ✅
 
-" Not having centered shapes (as opposed to MNIST) made it much more difficult to predict "
+It is possible to change a lot of parameters and view their effect on the neural network performance, but here we only focus on a select few. We look at a neural network with two hidden layers (both 75 neurons and ReLU activation), and a large dataset of 800 images (all centered). To get an indicator of the neural network performance, we look at the loss over time.
+
+<img src="images/two_hidden_large_data_centring.png" alt="drawing" width="300"/>
+
+We then set centering to false:
+
+<img src="images/two_hidden_large_data_no_centring.png" alt="drawing" width="300"/>
+
+We see that it is considerably harder for the model to classify the images properly. Having centered shapes (as is done in the MNIST dataset) reduces the amount of variation in the data, hence making it easier to classify.
+
+Adding noise to the image is another way of increasing variation in the dataset, thus making the neural network more robust when predicting.
+
+If we make the neural net deeper by adding two hidden layers and train over more epochs, we get the following results:
+
+<img src="images/four_hidden_large_data_no_centering.png" alt="drawing" width="300"/>
+
+We see that the deeper neural network performs better.
+
+## What I have learned
+
+Through this project I have gotten a deeper understanding of how backpropagation works, and especially the mathematical basis behind it. I have also gotten some experience with advanced matrix operations in numpy, where the `np.einsum()` function has been very helpful!
+
+## Future work 🚀
+
+Future work on this project could include:
+
+1. **Test on different datasets**: It would be interesting to test how well a neural network from this library would perform on other datasets, like for example MNIST, and compare its performance to other neural network libraries like TensorFlow and PyTorch.
+
+2. **Add support for Dropout**: Dropout layers could be useful in preventing overfitting.
+
+3. **Optimizing the code**: This could be making the data generation and backpropagation faster, less memory usage, randomly choosing minibatches during training (like in stochastic gradient-descent) etc.
