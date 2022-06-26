@@ -271,9 +271,3 @@ def train_data_images(filename, verbose=False, show_num_images=5):
     # Showing images from the test set
     dg.show_images(batch_test_x[:show_num_images],
                    batch_test_y[:show_num_images], output_test)
-
-
-if __name__ == "__main__":
-    train_data_images("config_two_hidden.ini",
-                      verbose=False,
-                      show_num_images=5)
