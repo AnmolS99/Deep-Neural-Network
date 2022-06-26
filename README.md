@@ -87,7 +87,7 @@ Through this project I have gotten a deeper understanding of how backpropagation
 
 Future work on this project could include:
 
-1. **Test on different datasets**: It would be interesting to test how well a neural network from this library would perform on other datasets, like for example MNIST, and compare its performance to other neural network libraries like TensorFlow and PyTorch.
+1. **Testing on different datasets**: It would be interesting to test how well a neural network from this library would perform on other datasets, like for example MNIST, and compare its performance to other neural network libraries like TensorFlow and PyTorch.
 
 2. **Add support for Dropout**: Dropout layers could be useful in preventing overfitting.
 
