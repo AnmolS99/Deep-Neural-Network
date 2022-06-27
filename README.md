@@ -16,7 +16,6 @@ The data generated consists of 2D-images of four different shapes: circle, squar
 Examples of 20x20 images with 1% noise and without centering are given below:
 
 <img src="images/circle20.png" alt="drawing" width="200"/> <img src="images/square20.png" alt="drawing" width="200"/>
-
 <img src="images/triangle20.png" alt="drawing" width="200"/> <img src="images/cross20.png" alt="drawing" width="200"/>
 
 ## Configuration files ⚙️
